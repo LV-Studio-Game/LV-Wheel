@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spicy Night 18+</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    body { background-color: #0f051d; color: #fff; text-align: center; min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 20px; }
+    .card { background: #1c0b36; border: 2px solid #ff0055; border-radius: 20px; padding: 25px; max-width: 450px; width: 100%; box-shadow: 0 0 25px rgba(255, 0, 85, 0.4); }
+    h1 { color: #ff0055; margin-bottom: 20px; font-size: 2rem; text-shadow: 0 0 10px #ff0055; }
+    h2 { color: #ff5588; margin-bottom: 15px; }
+    p { font-size: 1.1rem; line-height: 1.5; margin-bottom: 20px; }
+    input { width: 100%; padding: 12px; margin: 8px 0; border-radius: 10px; border: none; font-size: 1rem; text-align: center; }
+    button { background: linear-gradient(45deg, #ff0055, #ff5588); color: white; border: none; padding: 14px 20px; font-size: 1.1rem; font-weight: bold; border-radius: 10px; cursor: pointer; width: 100%; margin-top: 10px; box-shadow: 0 4px 15px rgba(255, 0, 85, 0.3); transition: transform 0.1s; }
+    button:active { transform: scale(0.98); }
+    .btn-secondary { background: #33155e; border: 1px solid #ff0055; margin-top: 8px; }
+    .hidden { display: none; }
+    .secret-box { background: #000; border: 1px dashed #ff0055; padding: 20px; border-radius: 10px; margin: 20px 0; font-weight: bold; min-height: 80px; display: flex; align-items: center; justify-content: center; color: #ff5588; }
+    .player-tag { color: #00ffff; font-weight: bold; }
+  </style>
+</head>
+<body>
+
+<div class="card">
+  <h1>🔥 SPICY NIGHT 18+ 🔥</h1>
+
+  <!-- Hauptmenü -->
+  <div id="menu">
+    <p>Wähle deinen Spielmodus für heute Abend:</p>
+    <button onclick="startMode('imposter')">🤫 Imposter Mode (Secret Question)</button>
+    <button onclick="startMode('tod')">🔥 Wahrheitsoder Pflicht (18+ Extra Spicy)</button>
+  </div>
+
+  <!-- Setup Imposter -->
+  <div id="setup-imposter" class="hidden">
+    <h2>Mitspieler eingeben</h2>
+    <p>Gib 4 Spielernamen ein:</p>
+    <input type="text" id="p1" placeholder="Spieler 1">
+    <input type="text" id="p2" placeholder="Spieler 2">
+    <input type="text" id="p3" placeholder="Spieler 3">
+    <input type="text" id="p4" placeholder="Spieler 4">
+    <button onclick="initImposter()">Runde Starten</button>
+    <button class="btn-secondary" onclick="showMenu()">Zurück</button>
+  </div>
+
+  <!-- Imposter Pass Screen -->
+  <div id="imposter-pass" class="hidden">
+    <h2>Übergabe!</h2>
+    <p>Gib das Handy an: <br><span id="current-player" class="player-tag"></span></p>
+    <button onclick="revealQuestion()">Frage anzeigen</button>
+  </div>
+
+  <!-- Imposter Reveal Screen -->
+  <div id="imposter-reveal" class="hidden">
+    <h2>Lies deine Frage leise!</h2>
+    <div class="secret-box" id="secret-text"></div>
+    <button onclick="nextPlayer()">Verstanden & Handy weitergeben</button>
+  </div>
+
+  <!-- Imposter Discussion Screen -->
+  <div id="imposter-discuss" class="hidden">
+    <h2>🗣️ Diskussion & Auflösung!</h2>
+    <p>Jeder antwortet jetzt reihum ehrlich auf seine Frage!</p>
+    <p><strong>Ziel:</strong> Findet heraus, wer der Imposter ist und wer eine komplett andere Frage beantwortet hat!</p>
+    <button onclick="showImposterIdentity()">Wer war der Imposter?</button>
+    <div id="imposter-result" class="secret-box hidden"></div>
+    <button onclick="initImposter()" style="margin-top: 15px;">Nächste Imposter-Runde</button>
+    <button class="btn-secondary" onclick="showMenu()">Hauptmenü</button>
+  </div>
+
+  <!-- Truth or Dare Mode -->
+  <div id="tod-screen" class="hidden">
+    <h2>🔥 Wahrheits oder Pflicht</h2>
+    <p id="tod-player-prompt">Wer ist dran?</p>
+    <button onclick="getTod('wahrheit')">💬 Wahrheit (Spicy)</button>
+    <button onclick="getTod('pflicht')">😈 Pflicht (Extrem)</button>
+    <div id="tod-result" class="secret-box hidden"></div>
+    <button class="btn-secondary" onclick="showMenu()">Hauptmenü</button>
+  </div>
+</div>
+
+<script>
+  // Daten für Imposter (Normal-Frage vs. Imposter-Frage)
+  const imposterQuestions = [
+    { normal: "Welchen Körperteil findest du beim anderen Geschlecht am erotischsten?", imposter: "Welchen Körperteil findest du an dir selbst am peinlichsten?" },
+    { normal: "Welchen Raum im Haus findest du für Sex am aufregendsten?", imposter: "In welchem Raum verbringst du die meiste Zeit am Handy?" },
+    { normal: "Welche Eigenschaft beim ersten Date ist für dich ein absoluter Turn-On?", imposter: "Welche Eigenschaft bei deinen Eltern nervt dich am meisten?" },
+    { normal: "Welcher Ort im Freien wäre perfekt für ein verbotenes Abenteuer?", imposter: "Wo würdest du gerne dein nächstes Picknick machen?" },
+    { normal: "Wie viele Sekunden dauert bei dir der perfekte, leidenschaftliche Kuss?", imposter: "Wie viele Minuten brauchst du morgens im Badezimmer?" },
+    { normal: "Welche Fantasie würdest du gerne mal in der Realität ausprobieren?", imposter: "Welches Reiseziel steht ganz oben auf deiner Bucket-List?" },
+    { normal: "Welches Kleidungsstück findest du an deiner Begleitung am attraktivsten?", imposter: "Welches Kleidungsstück würdest du am liebsten sofort wegwerfen?" },
+    { normal: "Was ist deine absolute Lieblingsposition im Bett?", imposter: "Was ist deine Lieblingsposition beim Couch-Schlafen?" },
+    { normal: "Welche wilde Sache hast du schon mal nach einem Clubbesuch gemacht?", imposter: "Was ist das Verrückteste, was du je gegessen hast?" },
+    { normal: "Welches Vorurteil über dein Liebesleben stimmt absolut?", imposter: "Welches Klischee über dein Sternzeichen stimmt überhaupt nicht?" }
+  ];
+
+  // Daten für Wahrheit oder Pflicht (18+)
+  const truthQuestions = [
+    "Was ist deine intimste Fantasie, die du bisher noch niemandem erzählt hast?",
+    "Hattest du schon mal Sex an einem öffentlichen Ort? Wenn ja, wo?",
+    "Welche Person in diesem Raum würdest du am ehesten für eine wilde Nacht auswählen?",
+    "Was ist der verrückteste Ort, an dem du je SB gemacht hast?",
+    "Hattest du schon mal einen Crotch-Shot oder Nude verschickt und es danach bereut?",
+    "Was ist dein größter Turn-off im Bett?",
+    "Hattest du schon mal einen Traum von jemandem aus dieser Runde?",
+    "Welche Unterwäsche trägst du genau jetzt?"
+  ];
+
+  const dareTasks = [
+    "Gib der Person links von dir einen leidenschaftlichen Kuss auf den Hals für 5 Sekunden.",
+    "Ziehe ein Kleidungsstück deiner Wahl aus (ausgenommen Schmuck).",
+    "Flüstere der Person rechts von dir deinen dreckigsten Gedanken ins Ohr.",
+    "Lass dir von der Gruppe ein spicy Foto auf deinen Social-Media-Account stellen (oder schicke es an deinen Crush).",
+    "Setze dich für die nächsten zwei Runden auf den Schoß einer Person deiner Wahl.",
+    "Massiere für 1 Minute die Schultern der Person gegenüber und schau ihr dabei durchgehend tief in die Augen.",
+    "Mache eine 30-sekündige, sexy Performance zu einer Musik deiner Wahl."
+  ];
+
+  let players = [];
+  let currentRound = {};
+  let playerIndex = 0;
+
+  function showMenu() {
+    hideAll();
+    document.getElementById('menu').classList.remove('hidden');
+  }
+
+  function hideAll() {
+    ['menu', 'setup-imposter', 'imposter-pass', 'imposter-reveal', 'imposter-discuss', 'tod-screen'].forEach(id => {
+      document.getElementById(id).classList.add('hidden');
+    });
+    document.getElementById('tod-result').classList.add('hidden');
+    document.getElementById('imposter-result').classList.add('hidden');
+  }
+
+  function startMode(mode) {
+    hideAll();
+    if (mode === 'imposter') {
+      document.getElementById('setup-imposter').classList.remove('hidden');
+    } else if (mode === 'tod') {
+      document.getElementById('tod-screen').classList.remove('hidden');
+    }
+  }
+
+  function initImposter() {
+    const p1 = document.getElementById('p1').value || "Spieler 1";
+    const p2 = document.getElementById('p2').value || "Spieler 2";
+    const p3 = document.getElementById('p3').value || "Spieler 3";
+    const p4 = document.getElementById('p4').value || "Spieler 4";
+    players = [p1, p2, p3, p4];
+
+    // Zufällige Frage & zufälligen Imposter bestimmen
+    const qPair = imposterQuestions[Math.floor(Math.random() * imposterQuestions.length)];
+    const imposterIdx = Math.floor(Math.random() * 4);
+
+    currentRound = {
+      pair: qPair,
+      imposterIdx: imposterIdx,
+      imposterName: players[imposterIdx]
+    };
+
+    playerIndex = 0;
+    hideAll();
+    nextPassScreen();
+  }
+
+  function nextPassScreen() {
+    if (playerIndex >= 4) {
+      // Alle haben die Frage gesehen
+      hideAll();
+      document.getElementById('imposter-discuss').classList.remove('hidden');
+      return;
+    }
+    hideAll();
+    document.getElementById('current-player').innerText = players[playerIndex];
+    document.getElementById('imposter-pass').classList.remove('hidden');
+  }
+
+  function revealQuestion() {
+    hideAll();
+    const isImposter = (playerIndex === currentRound.imposterIdx);
+    const question = isImposter ? currentRound.pair.imposter : currentRound.pair.normal;
+
+    document.getElementById('secret-text').innerText = question;
+    document.getElementById('imposter-reveal').classList.remove('hidden');
+  }
+
+  function nextPlayer() {
+    playerIndex++;
+    nextPassScreen();
+  }
+
+  function showImposterIdentity() {
+    const res = document.getElementById('imposter-result');
+    res.innerHTML = `🕵️‍♂️ <strong>${currentRound.imposterName}</strong> war der Imposter!<br><br>
+    <strong>Normale Frage:</strong> ${currentRound.pair.normal}<br><br>
+    <strong>Imposter Frage:</strong> ${currentRound.pair.imposter}`;
+    res.classList.remove('hidden');
+  }
+
+  function getTod(type) {
+    const res = document.getElementById('tod-result');
+    let text = "";
+    if (type === 'wahrheit') {
+      text = truthQuestions[Math.floor(Math.random() * truthQuestions.length)];
+    } else {
+      text = dareTasks[Math.floor(Math.random() * dareTasks.length)];
+    }
+    res.innerText = text;
+    res.classList.remove('hidden');
+  }
+</script>
+
+</body>
+</html>
